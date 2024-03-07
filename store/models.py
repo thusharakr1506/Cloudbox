@@ -84,6 +84,10 @@ class Order(models.Model):
     is_paid=models.BooleanField(default=False)
     total=models.PositiveIntegerField()
 
+    @property
+    def get_order_items(self):
+        return self.purchaseitems.all()
+
 class OrderItems(models.Model):
     order_object=models.ForeignKey(Order,on_delete=models.CASCADE,related_name="purchaseitems")
     basket_item_object=models.ForeignKey(BasketItem,on_delete=models.CASCADE)
