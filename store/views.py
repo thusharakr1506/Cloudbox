@@ -183,3 +183,10 @@ class OrderSummaryView(View):
     def get(self,request,*args,**kwargs):
         qs=Order.objects.filter(user_object=request.user)
         return render(request,"order_summary.html",{"data":qs})
+    
+class OrderItemRemoveView(View):
+
+    def get(self,request,*args,**kwargs):
+        id=kwargs.get("pk")
+        OrderItems.objects.get(id=id).delete()
+        return redirect("order-summary")
