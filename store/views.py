@@ -1,3 +1,5 @@
+import razorpay
+
 from django.shortcuts import render,redirect
 from django.views.generic import View,TemplateView
 from django.contrib.auth import authenticate,login,logout
@@ -9,7 +11,8 @@ from store.forms import RegistrationForm,LoginForm
 from store.models import Product,BasketItem,Size,Order,OrderItems
 from store.decorators import signin_required,owner_permission_required
 
-
+KEY_ID=""
+KEY_SECRET=""
 
 # url:localhost:8000/register/
 # method:get,post
@@ -53,7 +56,6 @@ class SignInView(View):
 class IndexView(View):
     def get(self,request,*args,**kwargs):
         qs=Product.objects.all()
-
         return render(request,"index.html",{"data":qs})
 
 
@@ -138,6 +140,7 @@ class CheckOutView(View):
         email=request.POST.get("email")
         phone=request.POST.get("phone")
         address=request.POST.get("address")
+        payment_method=request.POST.get("payment")
 
         # creating order_instance
 
@@ -146,7 +149,8 @@ class CheckOutView(View):
             delivery_address=address,
             phone=phone,
             email=email,
-            total=request.user.cart.basket_total
+            total=request.user.cart.basket_total,
+            payment=payment_method
         )
 
         # creating order_item_instance
@@ -161,12 +165,25 @@ class CheckOutView(View):
                 )
                 bi.is_order_placed=True
                 bi.save()
+                print("text block 1")
 
             
         except:
             order_obj.delete()
 
         finally:
+            print("text block 2")
+            print(payment_method)
+            print(order_obj)
+            if payment_method=="online" and order_obj:
+                print("text block 3")
+                client = razorpay.Client(auth=(KEY_ID, KEY_SECRET))
+
+                data = { "amount": order_obj.get_order_total*100, "currency": "INR", "receipt": "order_rcptid_11" }
+
+                payment = client.order.create(data=data)        
+
+                print("payment initiate",payment)
             return redirect("index")
 
 
@@ -181,7 +198,7 @@ class SignOutView(View):
 class OrderSummaryView(View):
 
     def get(self,request,*args,**kwargs):
-        qs=Order.objects.filter(user_object=request.user)
+        qs=Order.objects.filter(user_object=request.user).exclude(status="cancelled")
         return render(request,"order_summary.html",{"data":qs})
     
 class OrderItemRemoveView(View):
