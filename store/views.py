@@ -11,8 +11,8 @@ from store.forms import RegistrationForm,LoginForm
 from store.models import Product,BasketItem,Size,Order,OrderItems
 from store.decorators import signin_required,owner_permission_required
 
-KEY_ID=""
-KEY_SECRET=""
+KEY_ID="rzp_test_7O76WKtMptBPfv"
+KEY_SECRET="06SLBzFxYEJEueqPBjP2fLLM"
 
 # url:localhost:8000/register/
 # method:get,post
@@ -165,18 +165,18 @@ class CheckOutView(View):
                 )
                 bi.is_order_placed=True
                 bi.save()
-                print("text block 1")
+                # print("text block 1")
 
             
         except:
             order_obj.delete()
 
         finally:
-            print("text block 2")
+            # print("text block 2")
             print(payment_method)
             print(order_obj)
             if payment_method=="online" and order_obj:
-                print("text block 3")
+                # print("text block 3")
                 client = razorpay.Client(auth=(KEY_ID, KEY_SECRET))
 
                 data = { "amount": order_obj.get_order_total*100, "currency": "INR", "receipt": "order_rcptid_11" }
@@ -184,6 +184,13 @@ class CheckOutView(View):
                 payment = client.order.create(data=data)        
 
                 print("payment initiate",payment)
+                context={
+                    "key":KEY_ID,
+                    "order_id":payment.get("id"),
+                    "amount":payment.get("amount")
+                }
+                return render(request,"payment.html",{"context":context})
+
             return redirect("index")
 
 
@@ -207,3 +214,22 @@ class OrderItemRemoveView(View):
         id=kwargs.get("pk")
         OrderItems.objects.get(id=id).delete()
         return redirect("order-summary")
+    
+
+
+
+
+# {
+#     'id': 'order_NlOOvsr9d3GYgp',
+#     'entity': 'order',
+#     'amount': 239800,
+#     'amount_paid': 0,
+#     'amount_due': 239800,
+#     'currency': 'INR', 
+#     'receipt': 'order_rcptid_11', 
+#     'offer_id': None, 
+#     'status': 'created', 
+#     'attempts': 0, 
+#     'notes': [], 
+#     'created_at': 1710235310
+#     }  
