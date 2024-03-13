@@ -11,8 +11,6 @@ from store.forms import RegistrationForm,LoginForm
 from store.models import Product,BasketItem,Size,Order,OrderItems
 from store.decorators import signin_required,owner_permission_required
 
-KEY_ID="rzp_test_7O76WKtMptBPfv"
-KEY_SECRET="06SLBzFxYEJEueqPBjP2fLLM"
 
 # url:localhost:8000/register/
 # method:get,post
