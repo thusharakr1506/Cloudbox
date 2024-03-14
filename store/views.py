@@ -9,7 +9,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt 
 
 from store.forms import RegistrationForm,LoginForm
-from store.models import Product,BasketItem,Size,Order,OrderItems
+from store.models import Product,BasketItem,Size,Order,OrderItems,Category
 from store.decorators import signin_required,owner_permission_required
 
 KEY_ID=""
@@ -53,11 +53,17 @@ class SignInView(View):
         messages.error(request,"invalid credentials")
         return render(request,"login.html",{"form":form})
 
+
 @method_decorator([signin_required,never_cache],name="dispatch")    
 class IndexView(View):
     def get(self,request,*args,**kwargs):
         qs=Product.objects.all()
-        return render(request,"index.html",{"data":qs})
+        categories=Category.objects.all()
+        selected_category=request.GET.get("category")
+        if selected_category:
+            qs=qs.filter(category_object__name=selected_category)
+        
+        return render(request,"index.html",{"data":qs,"categories":categories})
 
 
 @method_decorator([signin_required,never_cache],name="dispatch")    
@@ -184,6 +190,9 @@ class CheckOutView(View):
 
                 payment = client.order.create(data=data)        
 
+                order_obj.order_id=payment.get("id")
+                order_obj.save()
+
                 print("payment initiate",payment)
                 context={
                     "key":KEY_ID,
@@ -198,8 +207,19 @@ class CheckOutView(View):
 class PaymentVerificationView(View):
 
     def post(self,request,*args,**kwargs):
-        
-        print("==================",request.POST)
+        client = razorpay.Client(auth=(KEY_ID, KEY_SECRET))
+        data=request.POST
+        try:
+
+            client.utility.verify_payment_signature(data)
+            print(data)
+            order_obj=Order.objects.get(order_id=data.get("razorpay_order_id"))
+            order_obj.is_paid=True
+            order_obj.save()
+            print("******transaction completed*****")
+        except:
+            print("!!!!!!!!!!Transaction Failed!!!!!!!!")
+
         return render(request,"success.html")
 
 

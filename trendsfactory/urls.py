@@ -24,7 +24,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("register/",views.SignUpView.as_view(),name="signup"),
     path("",views.SignInView.as_view(),name="signin"),
-    path("index/",views.IndexView.as_view(),name="index"),
+    path("index",views.IndexView.as_view(),name="index"),
     path("products/<int:pk>/",views.ProductDetailView.as_view(),name="product-detail"),
     path("home",views.HomeView.as_view(),name="home"),
     path("products/<int:pk>/add_to_basket/",views.AddToBasketView.as_view(),name="addto-basket"),
